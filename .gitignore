@@ -1,0 +1,15 @@
+# generic files to ignore
+*~
+*.class 
+*.lock
+*.log
+*.DS_Store
+*.swp
+*.out
+*.bak
+desktop.ini
+Thumbs.db
+.dropbox
+
+# Java class
+/target/*.class

@@ -1,0 +1,183 @@
+package $packageName;
+
+import java.util.List;
+import java.util.Set;
+import java.util.ArrayList;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+
+import org.supremica.external.assemblyOptimizer.GenericOperation;
+import org.supremica.external.assemblyOptimizer.GenericResource;
+import org.supremica.external.assemblyOptimizer.AssemblyStructureProtos.Operation;
+import org.supremica.external.assemblyOptimizer.ConcreteVariables;
+
+public class $className implements GenericOperation{ 
+   
+	private boolean isFinished = false;
+	
+	private String name;
+	
+	private int costTime;
+	
+	private int remainingTime;
+	
+	private boolean terminal;
+	
+	private int startingTime;
+	
+	public boolean isFinished()
+	{
+		return isFinished;
+	}
+	
+	public void resetFinished()
+	{
+		isFinished = false;
+	}
+	
+	public void setFinished()
+	{
+		isFinished = true;
+	}
+	
+	public void setName(String name)
+	{
+		this.name = name;
+	}
+	
+	public String getName()
+	{
+		return name;
+	}
+	
+	public void setCostTime(int costTime)
+	{
+		this.costTime = costTime;
+		this.remainingTime = costTime;
+	}
+	
+	public int getCostTime()
+	{
+		return costTime;
+	}
+	
+	public boolean evaluateGuard ()
+	{
+		updateLocalVariables();
+		return $guard;
+	}
+
+	public void performEnterActions ()
+	{
+		if(isFinished) throw new RuntimeException("Cannot perform enter actions");
+		updateLocalVariables();
+		$enterActions
+		updateGlobalVariables();
+	}
+	
+	public void performExitActions ()
+	{
+		if(isFinished) throw new RuntimeException("Cannot perform exit actions");
+		updateLocalVariables();
+		$exitActions
+		updateGlobalVariables();
+	}
+	
+	private void updateLocalVariables()
+	{
+		ConcreteVariables instance = ConcreteVariables.getInstance();
+		if(!instance.isEmpty())
+		{
+			Field[] fields = getClass().getDeclaredFields();
+			for(int i = 0; i < fields.length; i++)
+			{
+				Field field = fields[i];
+				String fieldName = field.getName();
+				if(instance.getVarNameSet().contains(fieldName))
+				{
+					try{
+						field.setInt(this, instance.getValueForVarName(fieldName));
+					}
+					catch(IllegalAccessException e)
+					{
+						e.printStackTrace();
+					}
+				} 
+			} 
+		}
+	}
+	
+	private void updateGlobalVariables()
+	{
+		ConcreteVariables instance = ConcreteVariables.getInstance();
+		if(!instance.isEmpty())
+		{
+			Field[] fields = getClass().getDeclaredFields();
+			for(int i = 0; i < fields.length; i++)
+			{
+				Field field = fields[i];
+				String fieldName = field.getName();
+				if(instance.getVarNameSet().contains(fieldName))
+				{
+					try
+					{
+						instance.setValueForVarName(fieldName, field.getInt(this));
+					}
+					catch(IllegalAccessException e)
+					{
+						e.printStackTrace();
+					}
+					
+				}
+			}
+		}
+	}
+	
+	public int compareTo(GenericOperation anotherOperation)
+	{
+		return costTime - anotherOperation.getCostTime();
+	}
+	
+	public int getRemainingTime()
+	{
+		return remainingTime;
+	}
+	
+	public void setRemainingTime(int time)
+	{
+		if(time < 0) throw new RuntimeException("remainingTime cannot be set to less 0");
+		remainingTime = time;
+	}
+	
+	public void resetRemainingTime()
+	{
+		remainingTime = costTime;
+	}
+	
+	public boolean isTerminal()
+	{
+		return terminal;
+	}
+	
+	public void setTerminal(boolean terminal)
+	{
+		this.terminal = terminal;
+	}
+	
+	public int getStartingTime()
+	{
+		return startingTime;
+	}
+	
+	public void setStartingTime(int time)
+	{
+		startingTime = time;
+	}
+	
+	public boolean evaluateTerminalCondition()
+	{
+		return $terminalCondition;
+	}
+
+$resourceAndOperationFieldsAndMethods
+}

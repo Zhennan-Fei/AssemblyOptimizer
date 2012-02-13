@@ -1,0 +1,10 @@
+package $packageName;
+import static java.lang.Math.*;
+
+public class $className
+	   implements org.supremica.external.assemblyOptimizer.Scheduler {
+
+   public double f(double x) {
+      return ($expression) ;
+   }
+}

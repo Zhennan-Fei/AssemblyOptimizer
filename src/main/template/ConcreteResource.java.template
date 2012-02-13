@@ -1,0 +1,64 @@
+package $packageName;
+
+import org.supremica.external.assemblyOptimizer.GenericResource;
+import org.supremica.external.assemblyOptimizer.AssemblyStructureProtos.Resource;
+
+public class $className implements GenericResource {
+	
+	private int capacity;
+	private int availableUnits;
+	
+	public void setCapacity (int capacity)
+	{
+		this.capacity = capacity;
+		this.availableUnits = capacity;
+	}
+	
+	public boolean isAvailable()
+	{
+		return availableUnits >= 1;
+	}
+	
+	public boolean isAvailable(int units)
+	{
+		return availableUnits >= units;
+	}
+	
+	public void allocate()
+	{
+		if(availableUnits < 1) 
+			throw new RuntimeException("Cannot be allocated!");
+		availableUnits = availableUnits - 1;
+	}
+	
+	public void allocate(int units)
+	{
+		if(availableUnits < units)
+			throw new RuntimeException("Cannot be allocated!");
+		availableUnits = availableUnits - units;
+	}
+	
+	public void deallocate()
+	{
+		if(availableUnits + 1 > capacity)
+			throw new RuntimeException("Cannot be deallocated!");
+		availableUnits = availableUnits + 1;
+	}
+	
+	public void deallocate(int units)
+	{
+		if(availableUnits + units > capacity)
+			throw new RuntimeException("Cannot be deallocated!");
+		availableUnits = availableUnits + units;
+	}
+	
+	public int getAvailable()
+	{
+		return availableUnits;
+	}
+	
+	public int getCapacity()
+	{
+		return capacity;
+	}	
+}

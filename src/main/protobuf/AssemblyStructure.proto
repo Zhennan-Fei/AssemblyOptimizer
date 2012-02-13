@@ -1,0 +1,75 @@
+package operationOptimizer;
+
+option java_package = "org.supremica.external.assemblyOptimizer";
+option java_outer_classname = "AssemblyStructureProtos";
+
+enum ExpressionLanguage 
+{
+  JAVA = 0;
+}
+
+enum VariableType 
+{
+  DOUBLE = 0;
+  FLOAT = 1;
+  INT32 = 2;
+  INT64 = 3;
+  UINT32 = 4;
+  UINT64 = 5;
+  BOOL = 6;
+  STRING = 7;
+}
+
+message Variable 
+{
+  optional string name = 1;
+  optional VariableType type = 2;
+  optional string initial = 3;
+  optional string comment = 4;
+}
+
+message Attribute {
+  optional string name = 1;
+  optional VariableType type = 2;
+  optional string value = 3;
+  optional string comment = 4;
+} 
+
+message Expression {
+  optional string expression = 1;
+  optional ExpressionLanguage language = 2 [default = JAVA];
+}
+
+message Guard {
+  optional Expression boolean_expression = 1; 
+}
+
+message Operation {
+
+  optional string name = 1;
+  optional string comment = 2;
+  optional Guard guard = 3;
+
+  repeated Expression enter_action = 4; 
+  repeated Expression exit_action = 5;
+ 
+  repeated string use_resource = 7;
+  optional uint32 cost_time = 8;
+  repeated string start_after_operations = 9;
+
+  optional bool terminal = 10;
+  repeated Variable variable = 11;
+  optional int32 start_time = 12 [default = -1];
+  optional Expression terminalCondition = 13;
+}
+
+message Resource {
+  optional string name = 1;
+  optional string comment = 2;  
+  optional Attribute capacity = 3; 
+}
+
+message JobShop {
+  repeated Operation operations = 1;
+  repeated Resource resources = 2;
+}
