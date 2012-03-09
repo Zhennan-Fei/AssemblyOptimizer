@@ -284,6 +284,8 @@ public class AssemblyOptimizer
 			}
 				
 		}
+                // If only terminal condition is used.
+                if (terminalCount == 0) terminalCount = -1;
 		
 		for(GenericResource resource: genericResourceList){
 			int capacity = resource.getCapacity();
@@ -304,7 +306,7 @@ public class AssemblyOptimizer
 	private Stack<GenericOperation> pathAlgo(Stack<GenericOperation> stack, List<GenericOperation> tempOplist, List<GenericOperation> cache)
 	{
 		// 1. Base case
-		if(terminalCount == 0)
+		if(terminalCount == 0 && terminalCount != -1)
 			return stack;
 		else if(stack.size() >= 1 && stack.peek().evaluateTerminalCondition())
 			return stack;

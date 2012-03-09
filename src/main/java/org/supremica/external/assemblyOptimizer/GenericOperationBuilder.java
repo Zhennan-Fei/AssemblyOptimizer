@@ -225,6 +225,12 @@ public class GenericOperationBuilder{
 			
 		source = source.replace("$resourceAndOperationFieldsAndMethods", rfmsb.toString());
 	  	//System.err.println(source);
+                
+                // Reset Command in each operation for external data
+                // temp to test. Should be sent via Operation proto
+                source = source.replace("$resetCommand", "sequenceplanner.IO.optimizer.ProductLocker.INSTANCE.reset()");
+                
+                
       	return source;
     }
 

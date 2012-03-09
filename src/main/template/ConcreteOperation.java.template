@@ -32,6 +32,7 @@ public class $className implements GenericOperation{
 	
 	public void resetFinished()
 	{
+                $resetCommand;
 		isFinished = false;
 	}
 	

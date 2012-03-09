@@ -13,3 +13,4 @@ Thumbs.db
 
 # Java class
 /target/*.class
+/target/
