@@ -15,21 +15,29 @@ import org.supremica.external.assemblyOptimizer.AssemblyStructureProtos.Resource
 public class RelationIdentifier {
     
     private TheBuilder builder;
-    private Map<GenericOperation, Map<GenericOperation,Set<Integer>>> uppEventMap = null;
-    private Random random = new Random();
+    private Map<GenericOperation, Integer> operationPosMap;  
+    private List<List<Set<Integer>>> uppEventList = null;
     
-    private int[][] relMap;
-    private Map<GenericOperation, Integer> operationPosMap;
-    
+    private Random random = new Random();   
+    private int[][] relMap;  // ev change this to list?   
     private List<AssemblyOptimizer.ConcurrentProcess> currentBestSeq;
+    
+    private boolean pathFound = false;
+    private boolean uppEventUpdated = false;
 
     
     public RelationIdentifier(TheBuilder builder) {      	
         this.builder = builder;
         relMap = new int[builder.genericOperationList.size()][builder.genericOperationList.size()];
         operationPosMap = new HashMap<GenericOperation,Integer>();
-        for (int i = 0; i<builder.genericOperationList.size()-1; i++){
+        uppEventList = new ArrayList<List<Set<Integer>>>(builder.genericOperationList.size());
+        for (int i = 0; i<builder.genericOperationList.size(); i++){
             operationPosMap.put(builder.genericOperationList.get(i),new Integer(i));
+            List<Set<Integer>> l = new ArrayList<Set<Integer>>(builder.genericOperationList.size());
+            for (int j = 0; j<builder.genericOperationList.size(); j++){ 
+                l.add(new HashSet<Integer>());
+            }
+            uppEventList.add(l);
         }              
     }
     
@@ -50,11 +58,7 @@ public class RelationIdentifier {
         return result;
     }
     
-    private void createEventMap(){
-        Map<GenericOperation, Map<GenericOperation,Set<Integer>>> 
-                eventMap = new HashMap<GenericOperation, Map<GenericOperation,Set<Integer>>>();
-        prepareEventMap(eventMap);      
-        int prevHC;
+    private void createEventMap(){    
         int sameRelCounter = 0;
         int sameBestPathCounter = 0;
         
@@ -63,13 +67,10 @@ public class RelationIdentifier {
         LinkedList<AssemblyOptimizer.ConcurrentProcess> tempProcessList = null;
 	int minCost = Integer.MAX_VALUE;	
         
-        for (int i = 0 ; i<1000;i++){
-            Map<GenericOperation, Map<GenericOperation,Set<Integer>>> 
-                    tempUppEventMap = new HashMap<GenericOperation, Map<GenericOperation,Set<Integer>>>();
-            prepareEventMap(tempUppEventMap); 
-            
-            
-            if (findAPath(tempUppEventMap, tempSolution)){
+        for (int i = 0 ; i<500;i++){     
+            List<List<Set<Integer>>> clone = createClone(uppEventList);
+            findAPath(uppEventList, tempSolution);
+            if (this.pathFound){
                 tempProcessList = AssemblyOptimizer.getMinimalCostToTheSolution(tempSolution);                
                 int tempCost = tempProcessList.getLast().getPossibleStartingTimeForNextOperation();
 			
@@ -80,23 +81,28 @@ public class RelationIdentifier {
                     minCost = tempCost;
                 } else sameBestPathCounter++;
                 
-                if (!mergeMaps(eventMap, tempUppEventMap))sameRelCounter++;
-                else sameRelCounter = 0;             
+                if (!this.uppEventUpdated)sameRelCounter++;
+                else {
+                    sameRelCounter = 0;
+                }             
 
-                if (sameRelCounter > 100 && sameBestPathCounter > 100) 
-                    break;           
+                if (sameRelCounter > 100 && sameBestPathCounter > 100){ 
+                    //System.out.println("no of iterations:" + i);
+                    break; 
+                }
+            } else {
+                uppEventList = clone;
             }
         }
-       
-        this.uppEventMap = eventMap;
-        //printEventMap(uppEventMap);
     }
     
     
-    private boolean findAPath(Map<GenericOperation, Map<GenericOperation,Set<Integer>>> tempUppEventMap, List<GenericOperation> tempSolution){
+    private boolean findAPath(List<List<Set<Integer>>> lUppEventList, List<GenericOperation> tempSolution){
         Set<GenericOperation> opsToExecute = new HashSet<GenericOperation>();
         ConcreteVariables.getInstance().resetVariables();
         tempSolution.clear();
+        this.uppEventUpdated = false;
+        
         for (GenericOperation o : builder.genericOperationList){
             o.resetFinished();
             opsToExecute.add(o);
@@ -110,41 +116,66 @@ public class RelationIdentifier {
                 }
             }
             if (!enabledOps.isEmpty()){
-                updateEventMap(enabledOps,tempUppEventMap);   
-                GenericOperation exec = enabledOps.get(random.nextInt(enabledOps.size()-1));
+                this.uppEventUpdated = updateEventMap(enabledOps,lUppEventList) || uppEventUpdated;   
+                int r = 0;
+                if (enabledOps.size()>1)
+                    r = random.nextInt(enabledOps.size()-1);
+                GenericOperation exec = enabledOps.get(r);
                 opsToExecute.remove(exec);
                 exec.performEnterActions();
                 exec.performExitActions();
                 tempSolution.add(exec);
-                if (exec.evaluateTerminalCondition()) return true;
+                if (exec.evaluateTerminalCondition()) {
+                    this.pathFound = true;
+                    return true;
+                }
             } else {
+                this.pathFound = false;
                 return false;
             }            
         }
     }
     
-    private void updateEventMap(List<GenericOperation> enabledOps, Map<GenericOperation, Map<GenericOperation,Set<Integer>>> tempUppEventMap){        
-        Map<GenericOperation,Integer> state = createState();
-        
+    private boolean updateEventMap(List<GenericOperation> enabledOps, List<List<Set<Integer>>> lUppEventList){        
+        int[] state = createState();
+        boolean result = false;
         for (GenericOperation o : enabledOps){
-            Map<GenericOperation,Set<Integer>> opMap = tempUppEventMap.get(o);
-            for (Map.Entry<GenericOperation,Set<Integer>> e : opMap.entrySet()){
-                e.getValue().add(state.get(e.getKey()));
+            int opPos = this.operationPosMap.get(o).intValue();
+            for (int i = 0; i<builder.genericOperationList.size(); i++){
+                result = lUppEventList.get(opPos).get(i).add(state[i]) || result;
             }
         }
+        return result;
     }
     
-    private Map<GenericOperation,Integer> createState(){
-        Map<GenericOperation,Integer> result = new HashMap<GenericOperation,Integer>();
+    private int[] createState(){
+        int[] result = new int[builder.genericOperationList.size()];
         for (GenericOperation o : builder.genericOperationList){
-            Integer i;
+            int i;
             if (o.isFinished()) {
                 i = new Integer(2);
             }else 
                 i = new Integer(0);
-            result.put(o, i);
+            int pos = this.operationPosMap.get(o).intValue();
+            result[pos] = i;
         }
         return result;
+    }
+    
+    private List<List<Set<Integer>>> createClone(List<List<Set<Integer>>> lUppEventList) {
+        List<List<Set<Integer>>> clone = new ArrayList<List<Set<Integer>>>(lUppEventList.size());
+        for (List<Set<Integer>> eList : lUppEventList){
+            List<Set<Integer>> cloneiList = new ArrayList<Set<Integer>>(eList.size());
+            for (Set<Integer> set : eList){
+                Set<Integer> cloneSet = new HashSet<Integer>();
+                for (Integer i : set)
+                    cloneSet.add(new Integer(i.intValue()));
+                cloneiList.add(cloneSet);
+            }
+            clone.add(cloneiList);
+        }
+        
+        return clone;
     }
     
     private void prepareEventMap(Map<GenericOperation, Map<GenericOperation,Set<Integer>>> map){
@@ -195,14 +226,14 @@ public class RelationIdentifier {
     
     
     private void transformEventsToRelations(){
-        if (uppEventMap == null) return;
-        
-        for (int i = 0; i<builder.genericOperationList.size()-2; i++){
-            for (int j = i+1; j<builder.genericOperationList.size()-1; j++){
-                GenericOperation sourceOp = builder.genericOperationList.get(i);
-                GenericOperation targetOp = builder.genericOperationList.get(j);
-                Set<Integer> sourceStates = uppEventMap.get(targetOp).get(sourceOp);
-                Set<Integer> targetStates = uppEventMap.get(sourceOp).get(targetOp);
+        if (this.uppEventList == null) return;       
+        for (int i = 0; i<builder.genericOperationList.size()-1; i++){
+            for (int j = i+1; j<builder.genericOperationList.size(); j++){
+                int sourcePos = this.operationPosMap.get(builder.genericOperationList.get(i));
+                int targetPos = this.operationPosMap.get(builder.genericOperationList.get(j));
+                
+                Set<Integer> sourceStates = uppEventList.get(targetPos).get(sourcePos);
+                Set<Integer> targetStates = uppEventList.get(sourcePos).get(targetPos);
                 this.relMap[i][j] = getRelNo(sourceStates,targetStates);
                 this.relMap[j][i] = getRelNo(targetStates, sourceStates);
             }
@@ -252,6 +283,8 @@ public class RelationIdentifier {
         return OTHER;
         
     }
+
+
     
     
     
