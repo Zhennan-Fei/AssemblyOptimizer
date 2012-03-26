@@ -73,6 +73,12 @@ public class ConcreteVariables{
 			varNameToValueMap.put(varName, defaultValue);
 		}
 	}
+        public void printVarValues(){
+            for(String id: varNameToValueMap.keySet())
+		{
+			System.out.println(id+"=="+varNameToValueMap.get(id).toString());
+		}
+        }
 }
 
 

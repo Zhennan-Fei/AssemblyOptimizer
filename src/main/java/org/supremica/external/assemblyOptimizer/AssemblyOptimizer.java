@@ -79,7 +79,7 @@ public class AssemblyOptimizer
 		return optimizedOperationList;
 	}
 	
-	private Operation buildOperationWithStartingTime(Operation operation, int startingTime)
+	public static Operation buildOperationWithStartingTime(Operation operation, int startingTime)
 	{
 		Operation.Builder operationWithStartingTime = Operation.newBuilder();
 		
@@ -97,7 +97,7 @@ public class AssemblyOptimizer
 		return operationWithStartingTime.build();
 	}
 	
-	private List<ConcurrentProcess> tempProcessList;
+	
 	
 	private GenericResourceBuilder resourceBuilder;
 	private GenericOperationBuilder operationBuilder;
@@ -319,6 +319,8 @@ public class AssemblyOptimizer
 			// by using cache.containsAll(tempOplist).
 			if(cache.containsAll(tempOplist))
 			{
+                            System.out.println("Probably no solution found! Sorry for the uggly termination");
+                            System.out.println("Check the termination condition");
 				if(stack.peek().isTerminal())
 					terminalCount++;
 				tempOplist.add(stack.pop());
@@ -331,7 +333,7 @@ public class AssemblyOptimizer
 				// Yes, op is temporarily qualified. Remove it from tempOplist and push it to stack.
 				// Now, all operations in tempOplist might be qualified next. So clear cache and continue.
 				if(op.evaluateGuard())
-				{
+				{                         
 					op.performEnterActions();
 					op.performExitActions();
 					tempOplist.remove(op);
@@ -359,7 +361,7 @@ public class AssemblyOptimizer
 		return temp.get(random.nextInt(temp.size()));
 	}
 	
-	private int getMinimalCostToTheSolution(List<GenericOperation> aSolution)
+	public static LinkedList<ConcurrentProcess> getMinimalCostToTheSolution(List<GenericOperation> aSolution)
 	{	
 		
 		// Now, every operation in the aSolution list: the field isFinished is set to true before.
@@ -373,45 +375,6 @@ public class AssemblyOptimizer
 		}
                 
         ConcreteVariables.getInstance().resetVariables();
-		
-		// TEST: FT 6*6 optimal sequence
-		/*aSolution.clear();
-		aSolution.add(genericOperationList.get(6)); // op21
-		aSolution.add(genericOperationList.get(12)); // op31
-		aSolution.add(genericOperationList.get(0)); // op11
-		aSolution.add(genericOperationList.get(13)); // op32
-		aSolution.add(genericOperationList.get(1)); // op12
-		aSolution.add(genericOperationList.get(18)); // op41
-		aSolution.add(genericOperationList.get(7)); // op22
-		aSolution.add(genericOperationList.get(14)); // op33
-		aSolution.add(genericOperationList.get(19)); // op42
-		aSolution.add(genericOperationList.get(30)); // op61
-		aSolution.add(genericOperationList.get(24)); // op51
-		aSolution.add(genericOperationList.get(8)); // op23
-		aSolution.add(genericOperationList.get(2)); // op13
-		aSolution.add(genericOperationList.get(31)); // op62
-		aSolution.add(genericOperationList.get(15)); // op34
-		aSolution.add(genericOperationList.get(32)); // op63
-		aSolution.add(genericOperationList.get(25)); // op52
-		aSolution.add(genericOperationList.get(20)); // op43
-		aSolution.add(genericOperationList.get(26)); // op53
-		aSolution.add(genericOperationList.get(16)); // op35
-		aSolution.add(genericOperationList.get(21)); // op44
-		aSolution.add(genericOperationList.get(33)); // op64
-		aSolution.add(genericOperationList.get(9)); // op24
-		aSolution.add(genericOperationList.get(3)); // op14
-		aSolution.add(genericOperationList.get(17)); // op36
-		aSolution.add(genericOperationList.get(22)); // op45
-		aSolution.add(genericOperationList.get(10)); // op25
-		aSolution.add(genericOperationList.get(27)); // op54
-		aSolution.add(genericOperationList.get(4)); // op15
-		aSolution.add(genericOperationList.get(34)); // op65
-		aSolution.add(genericOperationList.get(23)); // op46
-		aSolution.add(genericOperationList.get(28)); // op55
-		aSolution.add(genericOperationList.get(11)); // op26
-		aSolution.add(genericOperationList.get(35)); // op66
-		aSolution.add(genericOperationList.get(5)); // op16
-		aSolution.add(genericOperationList.get(29)); // op56 */
 		
 		int minimalCostTime = 0;
 		List<GenericOperation> copyOfTheSolution = new ArrayList<GenericOperation>(aSolution);
@@ -573,10 +536,10 @@ public class AssemblyOptimizer
 			last.setRemainingTime(0);
 		}	
 	
-		tempProcessList = processLinkedList;
+		//tempProcessList = processLinkedList;
 		// In order to get the minimal cost time, we only need to get the possibleStartingTimeForNextOperation of 
 		// the highest process.
-		return processLinkedList.getLast().getPossibleStartingTimeForNextOperation();
+		return processLinkedList;
 	}
 	
 	public void computeMinimalCost () throws Exception
@@ -585,12 +548,13 @@ public class AssemblyOptimizer
 		
 		List<GenericOperation> bestSolution = null;
 		List<GenericOperation> tempSolution = null;
+                LinkedList<ConcurrentProcess> tempProcessList = null;
 		
 		for(int i = nbrFeasibleSolutions; i > 0; i--)
 		{
 			tempSolution = computeAFeasibleSolution();
-			int tempCost = getMinimalCostToTheSolution(tempSolution);
-			
+			tempProcessList = getMinimalCostToTheSolution(tempSolution);
+			int tempCost = tempProcessList.getLast().getPossibleStartingTimeForNextOperation();
 			if(tempCost < minCost)
 			{
 				minCost = tempCost;
@@ -609,7 +573,7 @@ public class AssemblyOptimizer
 	 * 
 	************************************************************************************************************/
 	
-	class ConcurrentProcess {
+	public static class ConcurrentProcess {
 		
 		private List<GenericOperation> sequentialOperations;
 		private int possibleStartingTimeForNextOperation;
