@@ -1,0 +1,13 @@
+package $packageName;
+
+
+public abstract class AbstractOperation{ 
+   
+    $variables
+
+    public void resetVariables(){
+        $resetVariables
+    }
+
+
+}

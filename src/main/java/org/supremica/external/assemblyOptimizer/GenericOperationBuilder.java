@@ -24,9 +24,11 @@ import org.supremica.external.assemblyOptimizer.AssemblyStructureProtos.Variable
 /**
  * From a operation object, build a generic operation
  *
- * @author Zhennan, Knut
+ * @author Zhennan, Knut, Kristofer
  * 
- * The code is not optimized and needs to be refactored lated.
+ * The code is not optimized and needs to be refactored later.
+ * Changed variable handling by adding an abstract operation class containing
+ * static variables. This increased the performance by x5 - x10.
  */
 
 public class GenericOperationBuilder{
@@ -53,6 +55,10 @@ public class GenericOperationBuilder{
 	{    
 	    try 
 		{
+               // try with abstract class
+                String absClass = createAbsClassAsString(operation);
+                    
+                    
          	// generate semi-secure unique package and class names
          	final String packageName = PACKAGE_NAME;
          	final String className = CLASSNAME_SUFFIX + operation.getName();
@@ -63,6 +69,9 @@ public class GenericOperationBuilder{
          
 		 	// compile the generated Java source
          	final DiagnosticCollector<JavaFileObject> errs = new DiagnosticCollector<JavaFileObject>();
+                
+                Class absOp = compiler.compile(PACKAGE_NAME+".AbstractOperation", absClass, errs, new Class<?>[] { });
+                
          	Class<GenericOperation> compiledGenericOperation = compiler.compile(qName, source, errs,
                												new Class<?>[] { GenericOperation.class });
 		 
@@ -166,40 +175,40 @@ public class GenericOperationBuilder{
 		}
 		
 		// The concrete variables only support for Integer type. Improve later.
-		for(Variable variable: operation.getVariableList())
-		{
-			String varName = variable.getName();
-			String varInitial = variable.getInitial();
-			VariableType type = variable.getType();
-			switch(type)
-			{
-				case DOUBLE:
-					vfmsb.append("\t" + "double " + varName + " = " + Double.parseDouble(varInitial)  + ";\n");
-					break;
-				case FLOAT:
-					vfmsb.append("\t" + "float " + varName + " = " + Float.parseFloat(varInitial) + ";\n");
-					break;
-				case UINT32:
-					vfmsb.append("\t" + "int " + varName + " = " + Integer.parseInt(varInitial) + ";\n");
-					variableSet.addVarName(varName, Integer.valueOf(varInitial));
-					break;
-				case INT32:
-					vfmsb.append("\t" + "int " + varName + " = " + Integer.parseInt(varInitial) + ";\n");
-					variableSet.addVarName(varName, Integer.valueOf(varInitial));
-					break;
-				case UINT64:
-					vfmsb.append("\t" + "long " + varName + " = " + Long.parseLong(varInitial) + ";\n");
-					break;
-				case INT64:
-				 	vfmsb.append("\t" + "long " + varName + " = " + Long.parseLong(varInitial) + ";\n");
-					break;
-				case BOOL:
-					vfmsb.append("\t" + "boolean " + varName + " = " + Boolean.valueOf(varInitial) + ";\n");
-					break;
-				case STRING:
-					vfmsb.append("\t" + "String " + varName + " = " + varInitial + ";\n");
-			}
-		}
+//		for(Variable variable: operation.getVariableList())
+//		{
+//			String varName = variable.getName();
+//			String varInitial = variable.getInitial();
+//			VariableType type = variable.getType();
+//			switch(type)
+//			{
+//				case DOUBLE:
+//					vfmsb.append("\t" + "double " + varName + " = " + Double.parseDouble(varInitial)  + ";\n");
+//					break;
+//				case FLOAT:
+//					vfmsb.append("\t" + "float " + varName + " = " + Float.parseFloat(varInitial) + ";\n");
+//					break;
+//				case UINT32:
+//					vfmsb.append("\t" + "int " + varName + " = " + Integer.parseInt(varInitial) + ";\n");
+//					variableSet.addVarName(varName, Integer.valueOf(varInitial));
+//					break;
+//				case INT32:
+//					vfmsb.append("\t" + "int " + varName + " = " + Integer.parseInt(varInitial) + ";\n");
+//					variableSet.addVarName(varName, Integer.valueOf(varInitial));
+//					break;
+//				case UINT64:
+//					vfmsb.append("\t" + "long " + varName + " = " + Long.parseLong(varInitial) + ";\n");
+//					break;
+//				case INT64:
+//				 	vfmsb.append("\t" + "long " + varName + " = " + Long.parseLong(varInitial) + ";\n");
+//					break;
+//				case BOOL:
+//					vfmsb.append("\t" + "boolean " + varName + " = " + Boolean.valueOf(varInitial) + ";\n");
+//					break;
+//				case STRING:
+//					vfmsb.append("\t" + "String " + varName + " = " + varInitial + ";\n");
+//			}
+//		}
                 
                 
         /*        vrmsb.append("\n");
@@ -266,5 +275,66 @@ public class GenericOperationBuilder{
           	msgs.append(diagnostic.getMessage(null)).append("\n");
        	}
     }
+
+    private String createAbsClassAsString(Operation operation) {
+        
+        StringBuilder varDef = new StringBuilder();
+        StringBuilder varReset = new StringBuilder();
+        
+        for(Variable variable: operation.getVariableList()){
+            String varName = variable.getName();
+            String varInitial = variable.getInitial();
+            VariableType type = variable.getType();
+            switch(type){
+                case DOUBLE:
+                        varDef.append("\t" +"static "+ "double " + varName + " = " + Double.parseDouble(varInitial)  + ";\n");
+                        varReset.append("\t" + varName + " = " + Double.parseDouble(varInitial)  + ";\n");
+                        break;
+                case FLOAT:
+                        varDef.append("\t" +"static "+  "float " + varName + " = " + Float.parseFloat(varInitial) + ";\n");
+                        varReset.append("\t" + varName + " = " + Float.parseFloat(varInitial) + ";\n");
+                        break;
+                case UINT32:
+                        varDef.append("\t" +"static "+  "int " + varName + " = " + Integer.parseInt(varInitial) + ";\n");
+                        varReset.append("\t" + varName + " = " + Integer.parseInt(varInitial) + ";\n");
+                        break;
+                case INT32:
+                        varDef.append("\t" +"static "+  "int " + varName + " = " + Integer.parseInt(varInitial) + ";\n");
+                        varReset.append("\t" + varName + " = " + Integer.parseInt(varInitial) + ";\n");
+                        break;
+                case UINT64:
+                        varDef.append("\t" +"static "+  "long " + varName + " = " + Long.parseLong(varInitial) + ";\n");
+                        varReset.append("\t" + varName + " = " + Long.parseLong(varInitial) + ";\n");                        
+                        break;
+                case INT64:
+                        varDef.append("\t" +"static "+  "long " + varName + " = " + Long.parseLong(varInitial) + ";\n");
+                        varReset.append("\t" + varName + " = " + Long.parseLong(varInitial) + ";\n");
+                        break;
+                case BOOL:
+                        varDef.append("\t" +"static "+  "boolean " + varName + " = " + Boolean.valueOf(varInitial) + ";\n");
+                        varReset.append("\t" + varName + " = " + Boolean.valueOf(varInitial) + ";\n");
+                        break;
+                case STRING:
+                        varDef.append("\t" +"static "+  "String " + varName + " = " + varInitial + ";\n");
+                        varReset.append("\t" + varName + " = " + varInitial + ";\n");
+            }
+        }
+        
+        
+        
+        
+        StringBuilder result = new StringBuilder();
+        result.append("package "+PACKAGE_NAME+";\n\n");
+        result.append("public abstract class AbstractOperation{ \n");
+        result.append(varDef);
+        result.append("\t public void resetVariables(){\n");
+        result.append(varReset);
+        result.append("\t }\n");
+        result.append("}\n");
+        
+                
+        return result.toString();
+    }
 	
+
 }

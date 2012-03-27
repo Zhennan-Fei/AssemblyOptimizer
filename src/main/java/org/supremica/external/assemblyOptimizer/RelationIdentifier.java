@@ -15,6 +15,8 @@ import org.supremica.external.assemblyOptimizer.AssemblyStructureProtos.Resource
 public class RelationIdentifier {
     
     private TheBuilder builder;
+    private int noOfIterations = 1000;
+    private int breakAfterSameValue = 500;
     private Map<GenericOperation, Integer> operationPosMap;  
     private List<List<Set<Integer>>> uppEventList = null;
     
@@ -26,8 +28,11 @@ public class RelationIdentifier {
     private boolean uppEventUpdated = false;
 
     
-    public RelationIdentifier(TheBuilder builder) {      	
+    public RelationIdentifier(TheBuilder builder, int noOfIterations, int breakAfterSameValue) {      	
         this.builder = builder;
+        this.noOfIterations = noOfIterations;
+        this.breakAfterSameValue = breakAfterSameValue;
+        
         relMap = new int[builder.genericOperationList.size()][builder.genericOperationList.size()];
         operationPosMap = new HashMap<GenericOperation,Integer>();
         uppEventList = new ArrayList<List<Set<Integer>>>(builder.genericOperationList.size());
@@ -67,7 +72,7 @@ public class RelationIdentifier {
         LinkedList<AssemblyOptimizer.ConcurrentProcess> tempProcessList = null;
 	int minCost = Integer.MAX_VALUE;	
         
-        for (int i = 0 ; i<500;i++){     
+        for (int i = 0 ; i<noOfIterations;i++){     
             List<List<Set<Integer>>> clone = createClone(uppEventList);
             findAPath(uppEventList, tempSolution);
             if (this.pathFound){
@@ -86,8 +91,11 @@ public class RelationIdentifier {
                     sameRelCounter = 0;
                 }             
 
-                if (sameRelCounter > 100 && sameBestPathCounter > 100){ 
-                    //System.out.println("no of iterations:" + i);
+                if (sameRelCounter > breakAfterSameValue && sameBestPathCounter > breakAfterSameValue){ 
+                    System.out.println("Break due to the same value!");
+                    System.out.println("Same relations counter: " + sameRelCounter);
+                    System.out.println("Same best time counter: " + sameBestPathCounter);
+                    System.out.println("no of iterations:" + i);
                     break; 
                 }
             } else {
@@ -99,7 +107,7 @@ public class RelationIdentifier {
     
     private boolean findAPath(List<List<Set<Integer>>> lUppEventList, List<GenericOperation> tempSolution){
         Set<GenericOperation> opsToExecute = new HashSet<GenericOperation>();
-        ConcreteVariables.getInstance().resetVariables();
+        //ConcreteVariables.getInstance().resetVariables();
         tempSolution.clear();
         this.uppEventUpdated = false;
         

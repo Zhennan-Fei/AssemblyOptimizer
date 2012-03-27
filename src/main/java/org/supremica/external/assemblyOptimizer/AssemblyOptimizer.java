@@ -272,7 +272,7 @@ public class AssemblyOptimizer
 		Stack<GenericOperation> stack = new Stack<GenericOperation>();
 		
 		
-		ConcreteVariables.getInstance().resetVariables();
+		//ConcreteVariables.getInstance().resetVariables();
 		// reset isFinished flag for each operation
 		// Meanwhile, count the number of terminal operation
 		terminalCount = 0;
@@ -374,7 +374,7 @@ public class AssemblyOptimizer
 			operation.resetRemainingTime();	
 		}
                 
-        ConcreteVariables.getInstance().resetVariables();
+        //ConcreteVariables.getInstance().resetVariables();
 		
 		int minimalCostTime = 0;
 		List<GenericOperation> copyOfTheSolution = new ArrayList<GenericOperation>(aSolution);
