@@ -96,9 +96,11 @@ public class MessageFactory {
 		for(String anExitAction: exit_action)
 			operation.addExitAction(createExpression(anExitAction));
 			
-		for(String aResource: use_resource)
+		for(String aResource: use_resource){
+                    if (!aResource.isEmpty())
 			operation.addUseResource(aResource);
-			
+                }
+                
 		operation.setCostTime(cost_time);
 		operation.setTerminal(terminal);
 		
@@ -131,8 +133,11 @@ public class MessageFactory {
 		for(String anExitAction: exit_action)
 			operation.addExitAction(createExpression(anExitAction));
 			
-		for(String aResource: use_resource)
-			operation.addUseResource(aResource);
+		for(String aResource: use_resource){
+                    if (!aResource.isEmpty())
+                        operation.addUseResource(aResource);
+                }
+			
 			
 		operation.setCostTime(cost_time);
 		operation.setTerminal(terminal);
@@ -169,9 +174,10 @@ public class MessageFactory {
 		for(String anExitAction: exit_action)
 			operation.addExitAction(createExpression(anExitAction));
 			
-		for(String aResource: use_resource)
+		for(String aResource: use_resource){
+                    if (!aResource.isEmpty())
 			operation.addUseResource(aResource);
-			
+                }
 		operation.setCostTime(cost_time);
 		operation.setStartTime(start_time);
 		operation.setTerminal(terminal);

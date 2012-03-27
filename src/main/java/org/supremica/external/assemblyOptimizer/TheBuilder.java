@@ -27,6 +27,8 @@ public class TheBuilder {
     private Map<String, GenericResource> nameToResourceMap;
     private Map<String, GenericOperation> nameToOperationMap;
     public Map<GenericOperation, AssemblyStructureProtos.Operation> genericOperationToOperation;
+    public Map<AssemblyStructureProtos.Operation, GenericOperation> operationToGenericOperation;
+    public Map<String,GenericOperation> nameToGenericOperationMap;
 
     public TheBuilder(List<AssemblyStructureProtos.Operation> operationSet, List<AssemblyStructureProtos.Resource> resourceSet) {
         	
@@ -39,7 +41,9 @@ public class TheBuilder {
         nameToResourceMap = new HashMap<String, GenericResource>(resourceSet.size());
         nameToOperationMap = new HashMap<String, GenericOperation>(operationSet.size());
         genericOperationToOperation = new HashMap<GenericOperation, AssemblyStructureProtos.Operation>(operationSet.size());
-
+        operationToGenericOperation = new HashMap<AssemblyStructureProtos.Operation, GenericOperation>();
+        nameToGenericOperationMap = new HashMap<String, GenericOperation>();
+        
         resourceBuilder = new GenericResourceBuilder();
         operationBuilder = new GenericOperationBuilder();
         
@@ -62,6 +66,8 @@ public class TheBuilder {
 			genericOperation.setCostTime(operation.getCostTime());
 			genericOperation.setTerminal(operation.getTerminal());
 			genericOperationToOperation.put(genericOperation, operation);
+                        operationToGenericOperation.put(operation, genericOperation);
+                        nameToGenericOperationMap.put(operation.getName(), genericOperation);
 			// set resources 
 			Class operationClass = genericOperation.getClass();
 			Method setMethod = null;

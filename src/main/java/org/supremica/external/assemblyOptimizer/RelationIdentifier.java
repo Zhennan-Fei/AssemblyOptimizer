@@ -26,6 +26,8 @@ public class RelationIdentifier {
     
     private boolean pathFound = false;
     private boolean uppEventUpdated = false;
+    
+    private boolean relCalculated = false;
 
     
     public RelationIdentifier(TheBuilder builder, int noOfIterations, int breakAfterSameValue) {      	
@@ -49,6 +51,7 @@ public class RelationIdentifier {
     public void createRelationMap(){
         createEventMap();
         transformEventsToRelations();
+        relCalculated = true;
     }
     
     
@@ -62,6 +65,21 @@ public class RelationIdentifier {
         }
         return result;
     }
+    
+    // Fix so we use guid and enum for relations and for name matching
+    public int getRelation(String source, String target){
+        if (source.equals(target)) return -1;
+        GenericOperation sourceOp = builder.nameToGenericOperationMap.get(source);
+        GenericOperation targetOp = builder.nameToGenericOperationMap.get(target);
+        if (sourceOp != null && targetOp != null){
+            int sourcePos = this.operationPosMap.get(sourceOp);
+            int targetPos = this.operationPosMap.get(targetOp);
+            return this.relMap[sourcePos][targetPos];
+        }
+        return -1;
+        
+    }
+    
     
     private void createEventMap(){    
         int sameRelCounter = 0;
@@ -127,7 +145,7 @@ public class RelationIdentifier {
                 this.uppEventUpdated = updateEventMap(enabledOps,lUppEventList) || uppEventUpdated;   
                 int r = 0;
                 if (enabledOps.size()>1)
-                    r = random.nextInt(enabledOps.size()-1);
+                    r = random.nextInt(enabledOps.size());
                 GenericOperation exec = enabledOps.get(r);
                 opsToExecute.remove(exec);
                 exec.performEnterActions();
@@ -138,6 +156,12 @@ public class RelationIdentifier {
                     return true;
                 }
             } else {
+                if (opsToExecute.isEmpty()){
+                    // All operations have executed whitout termination
+                    // for now assume that this defines true termination
+                    this.pathFound = true;
+                    return true;
+                }
                 this.pathFound = false;
                 return false;
             }            
