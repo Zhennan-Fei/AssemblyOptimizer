@@ -9,5 +9,9 @@ public abstract class AbstractOperation{
         $resetVariables
     }
 
+    public int[] getCurrentState(){
+        $createAndReturnCurrentState
+    }
+
 
 }

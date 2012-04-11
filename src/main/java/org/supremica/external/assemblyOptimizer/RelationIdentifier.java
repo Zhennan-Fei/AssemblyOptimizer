@@ -28,6 +28,9 @@ public class RelationIdentifier {
     private boolean uppEventUpdated = false;
     
     private boolean relCalculated = false;
+    
+    Set<Integer> deadStates = new HashSet<Integer>();
+    Map<Integer,Set<GenericOperation>> restrictedStates = new HashMap<Integer,Set<GenericOperation>>();
 
     
     public RelationIdentifier(TheBuilder builder, int noOfIterations, int breakAfterSameValue) {      	
@@ -45,7 +48,7 @@ public class RelationIdentifier {
                 l.add(new HashSet<Integer>());
             }
             uppEventList.add(l);
-        }              
+        }
     }
     
     public void createRelationMap(){
@@ -129,15 +132,28 @@ public class RelationIdentifier {
         tempSolution.clear();
         this.uppEventUpdated = false;
         
+        Integer prevState = null;
+        Integer currentState = null;
+        GenericOperation lastExecutedOperation = null;
+        
+        
         for (GenericOperation o : builder.genericOperationList){
             o.resetFinished();
             opsToExecute.add(o);
         }
         
         while(true){
+            if (!opsToExecute.isEmpty()){
+                currentState = Arrays.hashCode(opsToExecute.iterator().next().getCurrentState());
+            }
+            Set<GenericOperation> restrictedOps = new HashSet<GenericOperation>();
+            if (this.restrictedStates.containsKey(currentState))
+                restrictedOps = restrictedStates.get(currentState);
+            
             List<GenericOperation> enabledOps = new ArrayList<GenericOperation>();
+            
             for (GenericOperation o : opsToExecute){
-                if (o.evaluateGuard()){
+                if (o.evaluateGuard() && !restrictedOps.contains(o)){
                     enabledOps.add(o);
                 }
             }
@@ -155,6 +171,7 @@ public class RelationIdentifier {
                     this.pathFound = true;
                     return true;
                 }
+                lastExecutedOperation = exec;
             } else {
                 if (opsToExecute.isEmpty()){
                     // All operations have executed whitout termination
@@ -162,9 +179,21 @@ public class RelationIdentifier {
                     this.pathFound = true;
                     return true;
                 }
+//                this.deadStates.add(currentState);
+//                if (prevState != null && lastExecutedOperation != null){
+//                    if (!restrictedStates.containsKey(prevState)){
+//                        Set<GenericOperation> set = new HashSet<GenericOperation>();
+//                        set.add(lastExecutedOperation);
+//                        restrictedStates.put(prevState, set);
+//                    } else {
+//                        restrictedStates.get(prevState).add(lastExecutedOperation);
+//                    }
+//                }
+                
                 this.pathFound = false;
                 return false;
-            }            
+            } 
+            prevState = currentState.intValue();
         }
     }
     

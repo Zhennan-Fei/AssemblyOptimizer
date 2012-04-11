@@ -22,6 +22,7 @@ public interface GenericOperation extends Comparable<GenericOperation>{
 	void performExitActions ();
 	
 	boolean isFinished();
+        boolean isExecute();
 	void resetFinished();
 	void setFinished();
 	
@@ -36,6 +37,7 @@ public interface GenericOperation extends Comparable<GenericOperation>{
 	void setStartingTime(int time);
 	
 	boolean evaluateTerminalCondition();
+        public int[] getCurrentState();
         
     //void resetVariables();
 	

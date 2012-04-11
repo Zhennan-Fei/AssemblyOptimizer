@@ -9,6 +9,7 @@ import org.supremica.external.assemblyOptimizer.runtime.AbstractOperation;
 public class $className extends AbstractOperation implements GenericOperation{ 
    
 	private boolean isFinished = false;
+        private boolean isExecute = false;
 	
 	private String name;
 	
@@ -24,12 +25,18 @@ public class $className extends AbstractOperation implements GenericOperation{
 	{
 		return isFinished;
 	}
+
+        public boolean isExecute()
+	{
+		return isExecute;
+	}
 	
 	public void resetFinished()
 	{
                 $resetCommand;
                 resetVariables();
 		isFinished = false;
+                isExecute = false;
 	}
 	
 	public void setFinished()
@@ -65,13 +72,17 @@ public class $className extends AbstractOperation implements GenericOperation{
 
 	public void performEnterActions ()
 	{
-		if(isFinished) throw new RuntimeException("Cannot perform enter actions");
+		if(isFinished) throw new RuntimeException("Op is finished. Cannot perform enter actions");
+                if(isExecute) throw new RuntimeException("Op has started. Cannot perform enter actions");
+                isExecute = true;
 		$enterActions
 	}
 	
 	public void performExitActions ()
 	{
-		if(isFinished) throw new RuntimeException("Cannot perform exit actions");
+		if(isFinished) throw new RuntimeException("Op is finished. Cannot perform exit actions");
+                if(!isExecute) throw new RuntimeException("Op has not started. Cannot perform exit actions");
+                isExecute = false;
 		$exitActions
 	}
 	

@@ -280,56 +280,76 @@ public class GenericOperationBuilder{
         
         StringBuilder varDef = new StringBuilder();
         StringBuilder varReset = new StringBuilder();
+        StringBuilder stateCreator = new StringBuilder();
         
+        if (!operation.getVariableList().isEmpty())
+            stateCreator.append("\t\t int[] result = new int[" +operation.getVariableList().size() + "];\n");
+        else stateCreator.append("\t\t int[] result = new int[];\n");
+        
+        int pos = 0;
         for(Variable variable: operation.getVariableList()){
             String varName = variable.getName();
             String varInitial = variable.getInitial();
             VariableType type = variable.getType();
             switch(type){
                 case DOUBLE:
-                        varDef.append("\t" +"static "+ "double " + varName + " = " + Double.parseDouble(varInitial)  + ";\n");
-                        varReset.append("\t" + varName + " = " + Double.parseDouble(varInitial)  + ";\n");
+                        varDef.append("static "+ "double " + varName + " = " + Double.parseDouble(varInitial)  + ";\n");
+                        varReset.append("\t\t" + varName + " = " + Double.parseDouble(varInitial)  + ";\n");
+                        stateCreator.append("\t\t result["+pos+"] = (new Double("+varName+")).hashCode();\n");
                         break;
                 case FLOAT:
-                        varDef.append("\t" +"static "+  "float " + varName + " = " + Float.parseFloat(varInitial) + ";\n");
-                        varReset.append("\t" + varName + " = " + Float.parseFloat(varInitial) + ";\n");
+                        varDef.append("static "+  "float " + varName + " = " + Float.parseFloat(varInitial) + ";\n");
+                        varReset.append("\t\t" + varName + " = " + Float.parseFloat(varInitial) + ";\n");
+                        stateCreator.append("\t\t result["+pos+"] = (new Float("+varName+")).hashCode();\n");
                         break;
                 case UINT32:
-                        varDef.append("\t" +"static "+  "int " + varName + " = " + Integer.parseInt(varInitial) + ";\n");
-                        varReset.append("\t" + varName + " = " + Integer.parseInt(varInitial) + ";\n");
+                        varDef.append("static "+  "int " + varName + " = " + Integer.parseInt(varInitial) + ";\n");
+                        varReset.append("\t\t" + varName + " = " + Integer.parseInt(varInitial) + ";\n");
+                        stateCreator.append("\t\t result["+pos+"] = "+varName+";\n");
                         break;
                 case INT32:
-                        varDef.append("\t" +"static "+  "int " + varName + " = " + Integer.parseInt(varInitial) + ";\n");
-                        varReset.append("\t" + varName + " = " + Integer.parseInt(varInitial) + ";\n");
+                        varDef.append("static "+  "int " + varName + " = " + Integer.parseInt(varInitial) + ";\n");
+                        varReset.append("\t\t" + varName + " = " + Integer.parseInt(varInitial) + ";\n");
+                        stateCreator.append("\t\t result["+pos+"] = "+varName+";\n");
                         break;
                 case UINT64:
-                        varDef.append("\t" +"static "+  "long " + varName + " = " + Long.parseLong(varInitial) + ";\n");
-                        varReset.append("\t" + varName + " = " + Long.parseLong(varInitial) + ";\n");                        
+                        varDef.append("static "+  "long " + varName + " = " + Long.parseLong(varInitial) + ";\n");
+                        varReset.append("\t\t" + varName + " = " + Long.parseLong(varInitial) + ";\n");   
+                        stateCreator.append("\t\t result["+pos+"] = "+varName+";\n");
                         break;
                 case INT64:
-                        varDef.append("\t" +"static "+  "long " + varName + " = " + Long.parseLong(varInitial) + ";\n");
-                        varReset.append("\t" + varName + " = " + Long.parseLong(varInitial) + ";\n");
+                        varDef.append("static "+  "long " + varName + " = " + Long.parseLong(varInitial) + ";\n");
+                        varReset.append("\t\t" + varName + " = " + Long.parseLong(varInitial) + ";\n");
+                        stateCreator.append("\t\t result["+pos+"] = "+varName+";\n");
                         break;
                 case BOOL:
-                        varDef.append("\t" +"static "+  "boolean " + varName + " = " + Boolean.valueOf(varInitial) + ";\n");
-                        varReset.append("\t" + varName + " = " + Boolean.valueOf(varInitial) + ";\n");
+                        varDef.append("static "+  "boolean " + varName + " = " + Boolean.valueOf(varInitial) + ";\n");
+                        varReset.append("\t\t" + varName + " = " + Boolean.valueOf(varInitial) + ";\n");
+                        stateCreator.append("\t\t result["+pos+"] = (new Boolean("+varName+")).hashCode();\n");
                         break;
                 case STRING:
-                        varDef.append("\t" +"static "+  "String " + varName + " = " + varInitial + ";\n");
-                        varReset.append("\t" + varName + " = " + varInitial + ";\n");
+                        varDef.append("static "+  "String " + varName + " = " + varInitial + ";\n");
+                        varReset.append("\t\t" + varName + " = " + varInitial + ";\n");
+                        stateCreator.append("\t\t result["+pos+"] = "+varName+".hashCode();\n");
             }
+            pos++;
         }
         
-        
-        
+        stateCreator.append("\treturn result;\n");
         
         StringBuilder result = new StringBuilder();
         result.append("package "+PACKAGE_NAME+";\n\n");
         result.append("public abstract class AbstractOperation{ \n");
         result.append(varDef);
-        result.append("\t public void resetVariables(){\n");
+        result.append("\n\t public void resetVariables(){\n");
         result.append(varReset);
         result.append("\t }\n");
+        
+        result.append("\t public int[] getCurrentState(){\n");
+        result.append(stateCreator);
+        result.append("\t }\n");
+        
+        
         result.append("}\n");
         
                 
