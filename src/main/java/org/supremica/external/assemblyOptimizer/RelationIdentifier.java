@@ -32,6 +32,8 @@ public class RelationIdentifier {
     Set<Integer> deadStates = new HashSet<Integer>();
     Map<Integer,Set<GenericOperation>> restrictedStates = new HashMap<Integer,Set<GenericOperation>>();
 
+    Set<GenericOperation> neverExecutedOps;
+    Set<String> neverRealizedSeams;
     
     public RelationIdentifier(TheBuilder builder, int noOfIterations, int breakAfterSameValue) {      	
         this.builder = builder;
@@ -49,6 +51,10 @@ public class RelationIdentifier {
             }
             uppEventList.add(l);
         }
+        
+        neverExecutedOps = new HashSet<GenericOperation>();
+        neverRealizedSeams = new HashSet<String>();
+        
     }
     
     public void createRelationMap(){
@@ -60,6 +66,7 @@ public class RelationIdentifier {
     
     public List<Operation> getOptimizedOperationList() {
         List<Operation> result = new ArrayList<Operation>(); 
+        if (currentBestSeq == null) return result;
         for(AssemblyOptimizer.ConcurrentProcess process: this.currentBestSeq){
             for(Map.Entry<Integer, GenericOperation> e: process.getStartingTimeToOperation().entrySet()){
                 Operation o = builder.genericOperationToOperation.get(e.getValue());
@@ -123,6 +130,15 @@ public class RelationIdentifier {
                 uppEventList = clone;
             }
         }
+        if (currentBestSeq == null){
+            System.out.println("No solutions found!");
+            if (!neverExecutedOps.isEmpty()){
+                System.out.println("The following operations where never executed:");
+                for (GenericOperation o : neverExecutedOps){
+                    System.out.println(o.getName());
+            }
+            }
+        }
     }
     
     
@@ -179,16 +195,21 @@ public class RelationIdentifier {
                     this.pathFound = true;
                     return true;
                 }
-//                this.deadStates.add(currentState);
-//                if (prevState != null && lastExecutedOperation != null){
-//                    if (!restrictedStates.containsKey(prevState)){
-//                        Set<GenericOperation> set = new HashSet<GenericOperation>();
-//                        set.add(lastExecutedOperation);
-//                        restrictedStates.put(prevState, set);
-//                    } else {
-//                        restrictedStates.get(prevState).add(lastExecutedOperation);
-//                    }
-//                }
+                this.deadStates.add(currentState);
+                if (prevState != null && lastExecutedOperation != null){
+                    if (!restrictedStates.containsKey(prevState)){
+                        Set<GenericOperation> set = new HashSet<GenericOperation>();
+                        set.add(lastExecutedOperation);
+                        restrictedStates.put(prevState, set);
+                    } else {
+                        restrictedStates.get(prevState).add(lastExecutedOperation);
+                    }
+                }
+                
+                if (neverExecutedOps.isEmpty())
+                    neverExecutedOps.addAll(opsToExecute);
+                else
+                    neverExecutedOps.retainAll(opsToExecute);
                 
                 this.pathFound = false;
                 return false;
