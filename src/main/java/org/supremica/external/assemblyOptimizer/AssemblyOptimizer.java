@@ -1,6 +1,6 @@
 /* 
-   Copyright (c) 2012, Knut Åkesson and Zhennan Fei at Chalmers University of Technology
-   Copyright (c) 2012, Sekvensa AB, Kristofer Bengtsson
+   Copyright (c) 2012, Knut Åkesson and Zhennan Fei, Chalmers University of Technology
+   Copyright (c) 2012, Kristofer Bengtsson, Sekvensa AB,
    Developed with the sponsorship of the Defense Advanced Research Projects Agency (DARPA).
    Permission is hereby granted, free of charge, to any person obtaining a copy of this data, including any
    software or models in source or binary form, specifications, algorithms, and documentation (collectively
